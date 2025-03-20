@@ -12,6 +12,7 @@ int halfh;
 int quarterh;
 
 int channels = 1;
+float sensetivity = 2.0;
 float buff[BUFF_SIZE];
 float buff2[BUFF_SIZE];
 int ptrCall = 0;
@@ -29,7 +30,7 @@ void callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 f
         if (ptrCall >= BUFF_SIZE) {
             break;
         }
-        buff[ptrCall] = in[i];
+        buff[ptrCall] = in[i] * sensetivity;
         ptrCall++;
     }
 }
@@ -92,10 +93,23 @@ int main(int argc, char *argv[]) {
     Color colorBarFull = colorSec;
     Color colorLine = colorSec;
     Color colorDot = colorMain;
+    Color colorDot2 = colorDot;
+    colorDot2.r /= 2;
+    colorDot2.g /= 2;
+    colorDot2.b /= 2;
     int colmod = 0;
 
     // Mainloop
     while (!WindowShouldClose()) {
+
+        if (IsKeyPressed(KEY_UP)) {
+            sensetivity += 0.2;
+        } else if (IsKeyPressed(KEY_DOWN)) {
+            sensetivity -= 0.2;
+            if (sensetivity < 0.4) {
+                sensetivity = 0.4;
+            }
+        }
         
         // Draw everything
         if (IsWindowResized()) {
@@ -121,25 +135,20 @@ int main(int argc, char *argv[]) {
                          buff[i + 16] * quarterh,
                      colorLine);
 
-            colorDot.r /= 2;
-            colorDot.g /= 2;
-            colorDot.b /= 2;
             DrawPixel(i, quarterh + buff2[i] * quarterh + 5, GRAY);
-            DrawPixel(i, quarterh + buff2[i] * quarterh + 5 + 1, colorDot);
-            DrawPixel(i, quarterh + buff2[i] * quarterh + 5 + 3, colorDot);
-            DrawPixel(i, quarterh + buff2[i] * quarterh + 5 + 5, colorDot);
+            DrawPixel(i, quarterh + buff2[i] * quarterh + 5 + 1, colorDot2);
+            DrawPixel(i, quarterh + buff2[i] * quarterh + 5 + 3, colorDot2);
+            DrawPixel(i, quarterh + buff2[i] * quarterh + 5 + 5, colorDot2);
 
-            colorDot = colorMain;
             DrawPixel(i, quarterh + buff[i] * quarterh, WHITE);
             DrawPixel(i, quarterh + buff[i] * quarterh + 1, colorDot);
             DrawPixel(i, quarterh + buff[i] * quarterh + 3, colorDot);
             DrawPixel(i, quarterh + buff[i] * quarterh + 5, colorDot);
         }
 
-        EndDrawing();
-        
         memcpy(buff2, buff, BUFF_SIZE * sizeof(buff[0]));
         ptrCall = 0;
+        EndDrawing();
     }
 
     ma_device_uninit(&device);
